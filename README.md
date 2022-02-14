@@ -1,2 +1,3 @@
 # SNI-Proxy
- A Simple SNI Proxy with internal DNS server
+
+A Simple SNI Proxy with internal DNS server

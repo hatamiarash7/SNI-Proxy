@@ -10,7 +10,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-var routeDomainList [][]string
+var routeList [][]string
 
 // Check domain list for requested hostname
 func checkList(domain string, domainList [][]string) bool {
@@ -68,7 +68,7 @@ func externalQuery(question dns.Question, server string) *dns.Msg {
 func parseQ(msg *dns.Msg, ip string) {
 	for _, question := range msg.Question {
 
-		if !checkList(question.Name, routeDomainList) {
+		if !checkList(question.Name, routeList) {
 			log.Printf("Bypassing %s\n", question.Name)
 			in := externalQuery(question, *upstreamDNS)
 			msg.Answer = append(msg.Answer, in.Answer...)

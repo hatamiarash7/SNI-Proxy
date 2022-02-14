@@ -11,8 +11,6 @@ import (
 	"github.com/miekg/dns"
 )
 
-const maxLengthBytes = 5000
-
 var bindIP = flag.String("BIP", "0.0.0.0", "Bind to an IP Address")
 var publicIP = flag.String("PIP", "", "Public IP of server")
 var domainList = flag.String("list", "", "Domain list")
@@ -26,7 +24,7 @@ func get80(writer http.ResponseWriter, req *http.Request) {
 
 // Handle HTTPS traffic
 func get443(packet net.Conn) error {
-	packetDataBytes := make([]byte, maxLengthBytes)
+	packetDataBytes := make([]byte, 5000)
 	packet.Read(packetDataBytes)								// Read packet
 	sni, _ := getHost(packetDataBytes)							// Get hostname
 	destipList, _ := net.LookupIP(sni)							// Get destination IP's from request
@@ -120,12 +118,12 @@ func main() {
 
 	// reload domain's list every 1 min
 	timeticker := time.Tick(60 * time.Second)
-	routeDomainList = loadDomains(*domainList)
+	routeList = loadDomains(*domainList)
 
 	for {
 		select {
 		case <-timeticker:
-			routeDomainList = loadDomains(*domainList)
+			routeList = loadDomains(*domainList)
 		}
 	}
 }

@@ -13,19 +13,19 @@ import (
 var routeDomainList [][]string
 
 // Check domain list for requested hostname
-func checkList(domainName string, domainList [][]string) bool {
+func checkList(domain string, domainList [][]string) bool {
 	for _, item := range domainList {
 		if len(item) == 2 {
 			if item[1] == "suffix" {
-				if strings.HasSuffix(domainName, item[0]) {
+				if strings.HasSuffix(domain, item[0]) {
 					return true
 				}
 			} else if item[1] == "fqdn" {
-				if domainName == item[0] {
+				if domain == item[0] {
 					return true
 				}
 			} else if item[1] == "prefix" {
-				if strings.HasPrefix(domainName, item[0]) {
+				if strings.HasPrefix(domain, item[0]) {
 					return true
 				}
 			}

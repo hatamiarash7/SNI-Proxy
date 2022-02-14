@@ -12,6 +12,7 @@ import (
 
 var routeDomainList [][]string
 
+// Check domain list for requested hostname
 func checkList(domainName string, domainList [][]string) bool {
 	for _, item := range domainList {
 		if len(item) == 2 {
@@ -34,6 +35,7 @@ func checkList(domainName string, domainList [][]string) bool {
 	return false
 }
 
+// Load all given domains
 func loadDomains(Filename string) [][]string {
 	file, err := os.Open(Filename)
 	handleError(err)
@@ -49,6 +51,7 @@ func loadDomains(Filename string) [][]string {
 	return lines
 }
 
+// Create an external query
 func externalQuery(question dns.Question, server string) *dns.Msg {
 	client := new(dns.Client)
 	msg := new(dns.Msg)
@@ -61,18 +64,19 @@ func externalQuery(question dns.Question, server string) *dns.Msg {
 	return in
 }
 
+// Parse query
 func parseQ(msg *dns.Msg, ip string) {
-	for _, q := range msg.Question {
+	for _, question := range msg.Question {
 
-		if !checkList(q.Name, routeDomainList) {
-			log.Printf("Bypassing %s\n", q.Name)
-			in := externalQuery(q, *upstreamDNS)
+		if !checkList(question.Name, routeDomainList) {
+			log.Printf("Bypassing %s\n", question.Name)
+			in := externalQuery(question, *upstreamDNS)
 			msg.Answer = append(msg.Answer, in.Answer...)
 		} else {
-			rr, err := dns.NewRR(fmt.Sprintf("%s A %s", q.Name, ip))
+			rr, err := dns.NewRR(fmt.Sprintf("%s A %s", question.Name, ip))
 
 			if err == nil {
-				log.Printf("Routing %s\n", q.Name)
+				log.Printf("Routing %s\n", question.Name)
 				msg.Answer = append(msg.Answer, rr)
 
 				return

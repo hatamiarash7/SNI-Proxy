@@ -19,17 +19,19 @@ var domainList = flag.String("list", "", "Domain list")
 var allDomains = flag.Bool("all", false, "Do for All Domains")
 var upstreamDNS = flag.String("upstream", "1.1.1.1", "Upstream DNS")
 
+// Redirect all HTTP traffic to HTTPS
 func get80(writer http.ResponseWriter, req *http.Request) {
 	http.Redirect(writer, req, "https://" + req.Host + req.RequestURI, 302)
 }
 
+// Handle HTTPS traffic
 func get443(packet net.Conn) error {
 	packetDataBytes := make([]byte, maxLengthBytes)
-	packet.Read(packetDataBytes)
-	sni, _ := getHost(packetDataBytes)
-	destipList, _ := net.LookupIP(sni)
-	destip := destipList[0]
-	target, err := net.Dial("tcp", destip.String()+":443")
+	packet.Read(packetDataBytes)								// Read packet
+	sni, _ := getHost(packetDataBytes)							// Get hostname
+	destipList, _ := net.LookupIP(sni)							// Get destination IP's from request
+	destip := destipList[0]										// We need the first one
+	target, err := net.Dial("tcp", destip.String() + ":443")	// Check reachability for target
 
 	if err != nil {
 		log.Println("Couldn't connect to target", err)
@@ -46,19 +48,27 @@ func get443(packet net.Conn) error {
 	return nil
 }
 
+// Handle DNS requests ( We have a DNS server here )
 func get53(writer dns.ResponseWriter, req *dns.Msg) {
-	m := new(dns.Msg)
-	m.SetReply(req)
-	m.Compress = false
+	msg := new(dns.Msg)
+	msg.SetReply(req)
+	msg.Compress = false
 
 	switch req.Opcode {
 	case dns.OpcodeQuery:
-		parseQ(m, *publicIP)
+		parseQ(msg, *publicIP) // Parse query
 	}
 
-	writer.WriteMsg(m)
+	writer.WriteMsg(msg)
 }
 
+func handleError(err error) {
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+// Run a HTTP server
 func runHttp() {
 	http.HandleFunc("/", get80)
 
@@ -69,12 +79,7 @@ func runHttp() {
 	server.ListenAndServe()
 }
 
-func handleError(err error) {
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
+// Run a HTTPS server
 func runHttps() {
 	l, err := net.Listen("tcp", ":443")
 	handleError(err)
@@ -87,9 +92,10 @@ func runHttps() {
 	}
 }
 
+// Run a DNS server
 func runDns() {
 	dns.HandleFunc(".", get53)
-	server := &dns.Server{Addr: ":53", Net: "udp"}
+	server := &dns.Server{Addr: ":53", Net: "udp"}				// Create server
 	log.Printf("Start DNS server on 0.0.0.0:53 -- listening")
 	err := server.ListenAndServe()
 	defer server.Shutdown()
@@ -107,10 +113,12 @@ func main() {
 		log.Fatalln("Give me `-list` and `-PIP`")
 	}
 
+	// Run servers
 	go runHttp()
 	go runHttps()
 	go runDns()
 
+	// reload domain's list every 1 min
 	timeticker := time.Tick(60 * time.Second)
 	routeDomainList = loadDomains(*domainList)
 

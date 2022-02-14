@@ -59,7 +59,7 @@ func getSNIBlock(data []byte) ([]byte, error) {
 	}
 
 	return []byte{}, fmt.Errorf(
-		"Finished parsing the SN block without finding an SNI",
+		"There is not any SNI in SN block",
 	)
 }
 
@@ -67,13 +67,13 @@ func getSNBlock(data []byte) ([]byte, error) {
 	index := 0
 
 	if len(data) < 2 {
-		return []byte{}, fmt.Errorf("Not enough bytes to be an SN block")
+		return []byte{}, fmt.Errorf("Not enough bytes for SN block")
 	}
 
 	extensionLength := dataLength(data, index)
 
 	if extensionLength+2 > len(data) {
-		return []byte{}, fmt.Errorf("Extension looks bonkers")
+		return []byte{}, fmt.Errorf("Extension looks not good")
 	}
 
 	data = data[2 : extensionLength+2]
@@ -94,7 +94,7 @@ func getSNBlock(data []byte) ([]byte, error) {
 	}
 
 	return []byte{}, fmt.Errorf(
-		"Finished parsing the Extension block without finding an SN block",
+		"There is not any SNI in Extension block",
 	)
 }
 
@@ -102,29 +102,29 @@ func getExtBlock(data []byte) ([]byte, error) {
 	var index = TLSHeaderLength + 38
 
 	if len(data) <= index+1 {
-		return []byte{}, fmt.Errorf("Not enough bits to be a Client Hello")
+		return []byte{}, fmt.Errorf("Not enough bytes for Client Hello")
 	}
 
 	if newIndex := index + 1 + int(data[index]); (newIndex + 2) < len(data) {
 		index = newIndex
 	} else {
-		return []byte{}, fmt.Errorf("Not enough bytes for the SessionID")
+		return []byte{}, fmt.Errorf("Not enough bytes for SessionID")
 	}
 
 	if newIndex := (index + 2 + dataLength(data, index)); (newIndex + 1) < len(data) {
 		index = newIndex
 	} else {
-		return []byte{}, fmt.Errorf("Not enough bytes for the Cipher List")
+		return []byte{}, fmt.Errorf("Not enough bytes for Cipher List")
 	}
 
 	if newIndex := index + 1 + int(data[index]); newIndex < len(data) {
 		index = newIndex
 	} else {
-		return []byte{}, fmt.Errorf("Not enough bytes for the compression length")
+		return []byte{}, fmt.Errorf("Not enough bytes for compression length")
 	}
 
 	if len(data[index:]) == 0 {
-		return nil, fmt.Errorf("No extensions")
+		return nil, fmt.Errorf("No extension")
 	}
 
 	return data[index:], nil

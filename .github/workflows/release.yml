@@ -10,7 +10,9 @@ jobs:
     name: Release Go Binary
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2
+
       - uses: wangyoucao577/go-release-action@master
         env:
           CGO_ENABLED: 0

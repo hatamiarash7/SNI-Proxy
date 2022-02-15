@@ -10,7 +10,7 @@ jobs:
     name: Release Go Binary
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - uses: wangyoucao577/go-release-action@master

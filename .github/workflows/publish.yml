@@ -56,12 +56,12 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: latest
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Sign the published Docker image
         if: ${{ github.event_name != 'pull_request' }}
         env:
-          TAGS: ${{ steps.meta.outputs.tags }}
+          TAGS: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           COSIGN_EXPERIMENTAL: 1
         run: cosign sign ${TAGS}

@@ -1,0 +1,11 @@
+[Unit]
+Description=SNI Proxy by A.Hatami - 2022
+
+[Service]
+User=root
+WorkingDirectory=/home/ubuntu
+ExecStart=sudo ./SNI-Proxy -BIP 0.0.0.0 -PIP 185.235.42.191 -list list
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

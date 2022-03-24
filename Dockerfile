@@ -1,5 +1,9 @@
 FROM golang:alpine
 
+RUN apk upgrade --no-cache \
+    && apk add git \
+    && rm -rf /tmp/* /var/cache/apk/*
+
 RUN mkdir /app
 
 ADD . /app/

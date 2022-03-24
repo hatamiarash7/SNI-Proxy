@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
 
       - name: Configure image name
-        id: string
+        id: image-name
         uses: ASzc/change-string-case-action@v2
         with:
           string: ${{ env.IMAGE_NAME }}
@@ -48,7 +48,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REGISTRY }}/${{ steps.string.outputs.lowercase }}
+          images: ${{ env.REGISTRY }}/${{ steps.image-name.outputs.lowercase }}
 
       - name: Build and push Docker image
         if: github.event_name != 'pull_request'

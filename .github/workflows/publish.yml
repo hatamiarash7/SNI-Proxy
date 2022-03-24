@@ -29,7 +29,9 @@ jobs:
 
       - name: Get version
         id: tag-version
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        uses: WyriHaximus/github-action-get-previous-tag@v1
+        with:
+          fallback: latest
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'

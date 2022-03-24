@@ -14,7 +14,7 @@ You can create service for the binary:
 
 ```ini
 [Unit]
-Description=SNI Proxy by A.Hatami - 2022
+Description=SNI Proxy
 
 [Service]
 User=root

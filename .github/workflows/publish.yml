@@ -27,7 +27,7 @@ jobs:
         id: image-name
         uses: ASzc/change-string-case-action@v2
         with:
-          string: ${{ env.IMAGE_NAME }}
+          string: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Get version
         id: tag-version
@@ -43,21 +43,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GB_TOKEN }}
 
-      - name: Extract Docker metadata
+      - name: Build image
         if: github.event_name != 'pull_request'
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.REGISTRY }}/${{ steps.image-name.outputs.lowercase }}
+        run: |
+          docker build -t ${{ steps.image-name.outputs.lowercase }}:${{ steps.tag-version.outputs.tag }} .
 
-      - name: Build and push Docker image
+      - name: Push to ghcr.io
         if: github.event_name != 'pull_request'
-        id: build-and-push
-        uses: docker/build-push-action@v2
-        env:
-          RELEASE_VERSION: ${{ steps.tag-version.outputs.tag }}
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.RELEASE_VERSION }}
-          github-token: ${{ secrets.GB_TOKEN }}
+        run: |
+          docker push ${{ steps.image-name.outputs.lowercase }}:${{ steps.tag-version.outputs.tag }}

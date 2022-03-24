@@ -21,11 +21,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: lowercase
+      - name: Configure image name
         id: string
         uses: ASzc/change-string-case-action@v2
         with:
           string: ${{ env.IMAGE_NAME }}
+
+      - name: Get version
+        id: tag-version
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
@@ -46,8 +50,10 @@ jobs:
         if: github.event_name != 'pull_request'
         id: build-and-push
         uses: docker/build-push-action@v2
+        env:
+          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${GITHUB_REF##*/}
+          tags: ${{ env.RELEASE_VERSION }}
           labels: ${{ steps.meta.outputs.labels }}

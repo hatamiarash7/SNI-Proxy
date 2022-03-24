@@ -16,10 +16,9 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: lowercase
@@ -50,5 +49,5 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${GITHUB_REF##*/}
           labels: ${{ steps.meta.outputs.labels }}

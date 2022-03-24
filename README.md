@@ -10,6 +10,22 @@ A Simple SNI Proxy with internal DNS server
 sudo ./SNI-Proxy -list domains -PIP <YOUR SERVER IP>
 ```
 
+You can create service for the binary:
+
+```ini
+[Unit]
+Description=SNI Proxy by A.Hatami - 2022
+
+[Service]
+User=root
+WorkingDirectory=/home/ubuntu
+ExecStart=sudo ./SNI-Proxy -PIP <YOUR SERVER IP> -list domains
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
 ## Docker
 
 ```bash

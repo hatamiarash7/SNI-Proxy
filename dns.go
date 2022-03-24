@@ -85,7 +85,7 @@ func loadDomains(Filename string) [][]string {
 		lines = append(lines, strings.Split(lowerCaseLine, ","))
 	}
 
-	log.Info("%s Loaded With %d Records", Filename, len(lines))
+	log.Infof("%s Loaded With %d Records", Filename, len(lines))
 
 	return lines
 }

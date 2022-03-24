@@ -2,10 +2,13 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
-	"log"
+	"net/http"
 	"os"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/miekg/dns"
 )
@@ -37,52 +40,93 @@ func checkList(domain string, domainList [][]string) bool {
 
 // Load all given domains
 func loadDomains(Filename string) [][]string {
-	file, err := os.Open(Filename)
-	handleError(err)
-	log.Println("Reloading file : ", Filename)
-	defer file.Close()
+	log.Info("Loading the domains from to a list")
+	
 	var lines [][]string
-	scanner := bufio.NewScanner(file)
+	var scanner *bufio.Scanner
+	
+	if strings.HasPrefix(Filename, "http://") || strings.HasPrefix(Filename, "https://") {
+		log.Info("Domain list is a URL")
+
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+		client := http.Client{
+			CheckRedirect: func(r *http.Request, via []*http.Request) error {
+				r.URL.Opaque = r.URL.Path
+				return nil
+			},
+		}
+
+		resp, err := client.Get(Filename)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.Info("Fetching URL : ", Filename)
+
+		defer resp.Body.Close()
+		scanner = bufio.NewScanner(resp.Body)
+	} else {
+		file, err := os.Open(Filename)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.Info("Loading File : ", Filename)
+
+		defer file.Close()
+		scanner = bufio.NewScanner(file)
+	}
 
 	for scanner.Scan() {
-		lines = append(lines, strings.Split(scanner.Text(), ","))
+		lowerCaseLine := strings.ToLower(scanner.Text())
+		lines = append(lines, strings.Split(lowerCaseLine, ","))
 	}
+
+	log.Info("%s Loaded With %d Records", Filename, len(lines))
 
 	return lines
 }
 
 // Create an external query
-func externalQuery(question dns.Question, server string) *dns.Msg {
+func externalQuery(question dns.Question, server string) (*dns.Msg, error) {
 	client := new(dns.Client)
 	msg := new(dns.Msg)
+	
 	msg.RecursionDesired = true
 	msg.Id = dns.Id()
 	msg.Question = make([]dns.Question, 1)
 	msg.Question[0] = question
-	in, _, _ := client.Exchange(msg, fmt.Sprintf("%s:53", server))
+	in, _, err := client.Exchange(msg, fmt.Sprintf("%s:53", server))
 	
-	return in
+	return in, err
 }
 
 // Parse query
 func parseQ(msg *dns.Msg, ip string) {
 	for _, question := range msg.Question {
-
 		if !checkList(question.Name, routeList) {
 			log.Printf("Bypassing %s\n", question.Name)
-			in := externalQuery(question, *upstreamDNS)
+
+			in, err := externalQuery(question, *upstreamDNS)
+
+			if err != nil {
+				log.Println(err)
+			}
+
 			msg.Answer = append(msg.Answer, in.Answer...)
 		} else {
 			rr, err := dns.NewRR(fmt.Sprintf("%s A %s", question.Name, ip))
 
 			if err == nil {
 				log.Printf("Routing %s\n", question.Name)
+
 				msg.Answer = append(msg.Answer, rr)
 
 				return
 			}
 		}
-
 	}
-
 }

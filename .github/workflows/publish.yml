@@ -51,7 +51,7 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@v2
         env:
-          RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.tag-version.outputs.tag }}
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}

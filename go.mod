@@ -1,6 +1,6 @@
 module github.com/hatamiarash7/sniproxy
 
-go 1.15
+go 1.18
 
 require (
 	github.com/miekg/dns v1.1.35
